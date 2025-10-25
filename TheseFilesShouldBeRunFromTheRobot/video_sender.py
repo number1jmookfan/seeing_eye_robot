@@ -73,13 +73,13 @@ def stream_camera_to_rtmp():
         process.stdin.close()
         process.wait()
 
-def stream_to_udp(destination: str):
+def stream_to_udp(cameraIndex: int, destination: str):
     """
     Stream to UDP endpoint (can be received by OBS via Media Source)
     OBS Setup: Add Media Source -> Uncheck "Local File" -> 
     Input: udp://@:5000 (on receiving computer)
     """
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(cameraIndex)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     cap.set(cv2.CAP_PROP_FPS, FPS)
@@ -136,7 +136,8 @@ if __name__ == "__main__":
     # stream_camera_to_rtmp()
     
     # Option 2: UDP streaming (direct peer-to-peer)
-    stream_to_udp(sys.argv[1])
+    # Arg1: Camera Index, Arg2: Destination IP and Port
+    stream_to_udp(sys.argv[1], sys.argv(2))
     
     # Option 3: Screen capture streaming
     # stream_screen_capture()
