@@ -9,7 +9,7 @@ from TwitchPlays_KeyCodes import *
 ##################### GAME VARIABLES #####################
 
 # Replace this with your Twitch username. Must be all lowercase.
-TWITCH_CHANNEL = 'dougdougw' 
+TWITCH_CHANNEL = 'spotfromdarpa' 
 
 # If streaming on Youtube, set this to False
 STREAMING_ON_TWITCH = True
@@ -63,7 +63,6 @@ def handle_message(message):
     try:
         msg = message['message'].lower()
         username = message['username'].lower()
-
         print("Got this message from " + username + ": " + msg)
 
         # Now that you have a chat message, this is where you add your game logic.
