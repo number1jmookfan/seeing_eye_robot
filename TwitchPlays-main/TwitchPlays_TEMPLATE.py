@@ -1,10 +1,11 @@
 import concurrent.futures
 import random
+import time
 import keyboard
-import pydirectinput
+#import pydirectinput
 import pyautogui
 import TwitchPlays_Connection
-from TwitchPlays_KeyCodes import *
+#from TwitchPlays_KeyCodes import *
 
 ##################### GAME VARIABLES #####################
 
@@ -79,44 +80,47 @@ def handle_message(message):
 
         # If the chat message is "left", then hold down the A key for 2 seconds
         if msg == "left": 
-            HoldAndReleaseKey(A, 2)
+            print("left")
+            #HoldAndReleaseKey(A, 2)
 
         # If the chat message is "right", then hold down the D key for 2 seconds
         if msg == "right": 
-            HoldAndReleaseKey(D, 2)
+            print("right")
+            #HoldAndReleaseKey(D, 2)
 
         # If message is "drive", then permanently hold down the W key
         if msg == "drive": 
-            ReleaseKey(S) #release brake key first
-            HoldKey(W) #start permanently driving
+            #ReleaseKey(S) #release brake key first
+            #HoldKey(W) #start permanently driving
+            print("drive")
 
         # If message is "reverse", then permanently hold down the S key
         if msg == "reverse": 
-            ReleaseKey(W) #release drive key first
-            HoldKey(S) #start permanently reversing
-
+            #ReleaseKey(W) #release drive key first
+            #HoldKey(S) #start permanently reversing
+            print("reverse")
         # Release both the "drive" and "reverse" keys
         if msg == "stop": 
-            ReleaseKey(W)
-            ReleaseKey(S)
-
+            #ReleaseKey(W)
+            #ReleaseKey(S)
+            print("stop")
         # Press the spacebar for 0.7 seconds
         if msg == "brake": 
-            HoldAndReleaseKey(SPACE, 0.7)
-
+            #HoldAndReleaseKey(SPACE, 0.7)
+            print("break")
         # Press the left mouse button down for 1 second, then release it
-        if msg == "shoot": 
-            pydirectinput.mouseDown(button="left")
-            time.sleep(1)
-            pydirectinput.mouseUp(button="left")
+        # if msg == "shoot": 
+        #     pydirectinput.mouseDown(button="left")
+        #     time.sleep(1)
+        #     pydirectinput.mouseUp(button="left")
 
-        # Move the mouse up by 30 pixels
-        if msg == "aim up":
-            pydirectinput.moveRel(0, -30, relative=True)
+        # # Move the mouse up by 30 pixels
+        # if msg == "aim up":
+        #     pydirectinput.moveRel(0, -30, relative=True)
 
-        # Move the mouse right by 200 pixels
-        if msg == "aim right":
-            pydirectinput.moveRel(200, 0, relative=True)
+        # # Move the mouse right by 200 pixels
+        # if msg == "aim right":
+        #     pydirectinput.moveRel(200, 0, relative=True)
 
         ####################################
         ####################################
