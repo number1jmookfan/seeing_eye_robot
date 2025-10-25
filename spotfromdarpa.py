@@ -74,9 +74,9 @@ def main():
     leader_arm.connect()
     # twitch.connect()
     # Below is for debug until twitch connection is actually programmed
-    twitch = {
-        "is_connected": True
-    }
+
+    twitch = object
+    twitch.is_connected = True
 
     # Init rerun viewer
     init_rerun(session_name="lekiwi_teleop")
