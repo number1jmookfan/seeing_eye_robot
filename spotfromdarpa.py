@@ -72,11 +72,16 @@ def main():
     # To connect you already should have this script running on LeKiwi: `python -m lerobot.robots.lekiwi.lekiwi_host --robot.id=my_awesome_kiwi`
     robot.connect()
     leader_arm.connect()
-    twitch.connect()
+    # twitch.connect()
+    # Below is for debug until twitch connection is actually programmed
+    twitch = {
+        "is_connected": True
+    }
 
     # Init rerun viewer
     init_rerun(session_name="lekiwi_teleop")
 
+    #if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
     if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
         raise ValueError("Robot or teleop is not connected!")
 
@@ -91,8 +96,8 @@ def main():
         # Arm
         arm_action = leader_arm.get_action()
         arm_action = {f"arm_{k}": v for k, v in arm_action.items()}
-        # Keyboard
-        twitch_action = twitch.get_action()
+        # twitch_action = twitch.get_action()
+        twitch_action = "rotate_right" # For debug purposes, just to test that the action is sent to the bot correctly
         base_action = twitch_to_base_action(robot, twitch_action)
         #base_action = robot._from_keyboard_to_base_action(keyboard_keys)
 
@@ -106,4 +111,5 @@ def main():
 
         busy_wait(max(1.0 / FPS - (time.perf_counter() - t0), 0.0))
 
-main()
+if __name__ == "__main__":
+    main()
