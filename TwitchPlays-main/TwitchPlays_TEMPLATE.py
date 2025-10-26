@@ -43,6 +43,7 @@ message_queue = []
 thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS)
 active_tasks = []
 pyautogui.FAILSAFE = False
+commands = ["forward", "backward", "left", "right"]
 
 ##########################################################
 
@@ -60,67 +61,35 @@ else:
     t = TwitchPlays_Connection.YouTube()
     t.youtube_connect(YOUTUBE_CHANNEL_ID, YOUTUBE_STREAM_URL)
 
-def handle_message(message):
+def move_robot(robot_command):
+    if robot_command == "don't move":
+        print("I am not moving Beep Boop")
+    print("I am moving " + robot_command + " Beep Boop")
+    
+def handle_message(messages):
     try:
-        msg = message['message'].lower()
-        username = message['username'].lower()
-        print("Got this message from " + username + ": " + msg)
-
+        histogram = {"don't move":0}
+        for message in messages:
+            msg = message['message'].lower()
+            username = message['username'].lower()
+            print("Got this message from " + username + ": " + msg)
+            if msg in commands:
+                if msg in histogram.keys():
+                    histogram[msg] += 1
+                else:
+                    histogram[msg] = 1
+        robot_command = "don't move"
+        for command, frequency in histogram.items():
+            if frequency > histogram[robot_command]:
+                robot_command = command
+        move_robot(robot_command)
         # Now that you have a chat message, this is where you add your game logic.
         # Use the "HoldKey(KEYCODE)" function to permanently press and hold down a key.
         # Use the "ReleaseKey(KEYCODE)" function to release a specific keyboard key.
         # Use the "HoldAndReleaseKey(KEYCODE, SECONDS)" function press down a key for X seconds, then release it.
         # Use the pydirectinput library to press or move the mouse
 
-        # I've added some example videogame logic code below:
-
-        ###################################
-        # Example GTA V Code 
-        ###################################
-
-        # If the chat message is "left", then hold down the A key for 2 seconds
-        if msg == "left": 
-            print("left")
-            #HoldAndReleaseKey(A, 2)
-
-        # If the chat message is "right", then hold down the D key for 2 seconds
-        if msg == "right": 
-            print("right")
-            #HoldAndReleaseKey(D, 2)
-
-        # If message is "drive", then permanently hold down the W key
-        if msg == "drive": 
-            #ReleaseKey(S) #release brake key first
-            #HoldKey(W) #start permanently driving
-            print("drive")
-
-        # If message is "reverse", then permanently hold down the S key
-        if msg == "reverse": 
-            #ReleaseKey(W) #release drive key first
-            #HoldKey(S) #start permanently reversing
-            print("reverse")
-        # Release both the "drive" and "reverse" keys
-        if msg == "stop": 
-            #ReleaseKey(W)
-            #ReleaseKey(S)
-            print("stop")
-        # Press the spacebar for 0.7 seconds
-        if msg == "brake": 
-            #HoldAndReleaseKey(SPACE, 0.7)
-            print("break")
-        # Press the left mouse button down for 1 second, then release it
-        # if msg == "shoot": 
-        #     pydirectinput.mouseDown(button="left")
-        #     time.sleep(1)
-        #     pydirectinput.mouseUp(button="left")
-
-        # # Move the mouse up by 30 pixels
-        # if msg == "aim up":
-        #     pydirectinput.moveRel(0, -30, relative=True)
-
-        # # Move the mouse right by 200 pixels
-        # if msg == "aim right":
-        #     pydirectinput.moveRel(200, 0, relative=True)
+        
 
         ####################################
         ####################################
@@ -145,13 +114,15 @@ while True:
         last_time = time.time()
     else:
         # Determine how many messages we should handle now
-        r = 1 if MESSAGE_RATE == 0 else (time.time() - last_time) / MESSAGE_RATE
-        n = int(r * len(message_queue))
+        # r = 1 if MESSAGE_RATE == 0 else (time.time() - last_time) / MESSAGE_RATE
+        # n = int(r * len(message_queue))
+        r = MESSAGE_RATE
+        n = int(abs(time.time()-last_time)*r)
         if n > 0:
             # Pop the messages we want off the front of the queue
-            messages_to_handle = message_queue[0:n]
-            del message_queue[0:n]
-            last_time = time.time();
+            messages_to_handle = message_queue[0:len(message_queue)]
+            del message_queue[0:len(message_queue)]
+            last_time = time.time()
 
     # If user presses Shift+Backspace, automatically end the program
     if keyboard.is_pressed('shift+backspace'):
@@ -160,9 +131,9 @@ while True:
     if not messages_to_handle:
         continue
     else:
-        for message in messages_to_handle:
-            if len(active_tasks) <= MAX_WORKERS:
-                active_tasks.append(thread_pool.submit(handle_message, message))
-            else:
-                print(f'WARNING: active tasks ({len(active_tasks)}) exceeds number of workers ({MAX_WORKERS}). ({len(message_queue)} messages in the queue)')
- 
+        # for message in messages_to_handle:
+        #     if len(active_tasks) <= MAX_WORKERS:
+        #         active_tasks.append(thread_pool.submit(handle_message, message))
+        #     else:
+        #         print(f'WARNING: active tasks ({len(active_tasks)}) exceeds number of workers ({MAX_WORKERS}). ({len(message_queue)} messages in the queue)')
+        handle_message(messages_to_handle)
