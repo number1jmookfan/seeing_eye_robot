@@ -17,8 +17,6 @@
 import time
 
 from lerobot.robots.lekiwi import LeKiwiClient, LeKiwiClientConfig
-#from teleop_twitch import TwitchTeleop, TwitchTeleopConfig
-from lerobot.teleoperators.so100_leader import SO100Leader, SO100LeaderConfig
 from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.visualization_utils import init_rerun, log_rerun_data
 
@@ -58,31 +56,20 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
 
 def main():
     # Create the robot and teleoperator configurations
-    robot_config = LeKiwiClientConfig(remote_ip="172.18.134.136", id="my_lekiwi")
-    teleop_arm_config = SO100LeaderConfig(port="/dev/tty.usbmodem585A0077581", id="my_awesome_leader_arm")
-    #twitch_config = TwitchTeleopConfig(id="twitch_chat")
+    robot_config = LeKiwiClientConfig(remote_ip="192.168.0.251", id="my_awesome_kiwi")
 
     # Initialize the robot and teleoperator
     robot = LeKiwiClient(robot_config)
-    leader_arm = SO100Leader(teleop_arm_config)
-    #twitch = TwitchTeleop(twitch_config)
-
 
     # Connect to the robot and teleoperator
     # To connect you already should have this script running on LeKiwi: `python -m lerobot.robots.lekiwi.lekiwi_host --robot.id=my_awesome_kiwi`
     robot.connect()
-    leader_arm.connect()
-    # twitch.connect()
-    # Below is for debug until twitch connection is actually programmed
-
-    twitch = object
-    twitch.is_connected = True
 
     # Init rerun viewer
     init_rerun(session_name="lekiwi_teleop")
 
     #if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
-    if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
+    if not robot.is_connected:
         raise ValueError("Robot or teleop is not connected!")
 
     print("Starting teleop loop...")
@@ -92,15 +79,15 @@ def main():
         # Get robot observation
         observation = robot.get_observation()
 
-        # Get teleop action
-        # Arm
-        arm_action = leader_arm.get_action()
-        arm_action = {f"arm_{k}": v for k, v in arm_action.items()}
-        # twitch_action = twitch.get_action()
-        twitch_action = "rotate_right" # For debug purposes, just to test that the action is sent to the bot correctly
+        # For debug purposes, just to test that the action is sent to the bot correctly
+        twitch_action = "rotate_right"
         base_action = twitch_to_base_action(robot, twitch_action)
-        #base_action = robot._from_keyboard_to_base_action(keyboard_keys)
-
+        arm_action = {'arm_shoulder_pan.pos': 0.00,
+                      'arm_shoulder_lift.pos': -90.00,
+                      'arm_elbow_flex.pos': 90.00,
+                      'arm_wrist_flex.pos': 0.00,
+                      'arm_wrist_roll.pos': 0.00,
+                      'arm_gripper.pos': 5.00}
         action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
 
         # Send action to robot
