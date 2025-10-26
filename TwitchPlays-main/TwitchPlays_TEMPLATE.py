@@ -88,7 +88,6 @@ def handle_message(messages):
         # Use the "ReleaseKey(KEYCODE)" function to release a specific keyboard key.
         # Use the "HoldAndReleaseKey(KEYCODE, SECONDS)" function press down a key for X seconds, then release it.
         # Use the pydirectinput library to press or move the mouse
-
         
 
         ####################################
@@ -116,8 +115,7 @@ while True:
         # Determine how many messages we should handle now
         # r = 1 if MESSAGE_RATE == 0 else (time.time() - last_time) / MESSAGE_RATE
         # n = int(r * len(message_queue))
-        r = MESSAGE_RATE
-        n = int(abs(time.time()-last_time)*r)
+        n = int(abs(time.time()-last_time)*MESSAGE_RATE)
         if n > 0:
             # Pop the messages we want off the front of the queue
             messages_to_handle = message_queue[0:len(message_queue)]
