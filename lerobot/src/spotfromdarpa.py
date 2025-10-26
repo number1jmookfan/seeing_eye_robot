@@ -1,5 +1,5 @@
 # !/usr/bin/env python
-
+import os.path
 # Copyright 2025 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,13 @@ import time
 from lerobot.robots.lekiwi import LeKiwiClient, LeKiwiClientConfig
 from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.visualization_utils import init_rerun, log_rerun_data
+from whatdoesthedogsay import Barker
 
 import TwitchPlays_Connections
 
 FPS = 30
+
+bark_file = os.path.abspath("bark.mp3")
 
  #Twitch Stuff
 TWITCH_CHANNEL = 'mintchipss' 
@@ -132,6 +135,9 @@ def main():
 
     # Initialize the robot and teleoperator
     robot = LeKiwiClient(robot_config)
+    # Used to connect to OBS and play barks
+    barker = Barker()
+
     #Intitialize arm action
     arm_action = {'arm_shoulder_pan.pos': 0.00,
                         'arm_shoulder_lift.pos': -90.00,
@@ -143,6 +149,10 @@ def main():
     # Connect to the robot and teleoperator
     # To connect you already should have this script running on LeKiwi: `python -m lerobot.robots.lekiwi.lekiwi_host --robot.id=my_awesome_kiwi`
     robot.connect()
+    # Connect to OBS for playing sound effect
+    barker.connect()
+    # Give the name of the scene you want to play the sound on, the name you want for the source, and the path to the audio file.
+    barker.set_source("Robot", "DogBark", bark_file)
 
     # Init rerun viewer
     init_rerun(session_name="lekiwi_teleop")
@@ -160,7 +170,6 @@ def main():
         #active_tasks = [t for t in active_tasks if not t.done()]
         #Check for messages
         new_messages = t.twitch_receive_messages()
-        new_messages = t.twitch_receive_messages()
         if new_messages:
             message_queue += new_messages #Adds new messages to queue
             message_queue = message_queue[:MAX_QUEUE_LENGTH] #Limits queue length
@@ -173,7 +182,6 @@ def main():
 
             #pops messages from queue
             messages_to_handle = message_queue[0:len(message_queue)]
-            message_queue = []
             message_queue = []
             
             # For debug purposes, just to test that the action is sent to the bot correctly
