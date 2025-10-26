@@ -20,10 +20,19 @@ from lerobot.robots.lekiwi import LeKiwiClient, LeKiwiClientConfig
 from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.visualization_utils import init_rerun, log_rerun_data
 
-import TwitchPlays_Connection
-import keyboard
+import TwitchPlays_Connections
 
 FPS = 30
+
+ #Twitch Stuff
+TWITCH_CHANNEL = 'spotfromdarpa' 
+MAX_QUEUE_LENGTH = 20
+ #Messages to be addressed
+message_queue = []
+#twitch tasks yet to be done
+active_tasks = []
+#Possible Robot Commands
+commands = ["forward", "backward", "left", "right", "rotate_left", "rotate_right"]
 
 # Converts the delta values to the actual m/s expected by the bot
 def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
@@ -38,7 +47,7 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
     theta_cmd = 0.0  # deg/s rotation
 
     match twitch_action:
-        case "foward":
+        case "forward":
             x_cmd = xy_speed
         case "backward":
             x_cmd = -xy_speed
@@ -57,37 +66,7 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
         "theta.vel": theta_cmd,
     }
 
-def main():
-    # Create the robot and teleoperator configurations
-    robot_config = LeKiwiClientConfig(remote_ip="192.168.0.251", id="my_awesome_kiwi")
-
-    # Initialize the robot and teleoperator
-    robot = LeKiwiClient(robot_config)
-
-    # Connect to the robot and teleoperator
-    # To connect you already should have this script running on LeKiwi: `python -m lerobot.robots.lekiwi.lekiwi_host --robot.id=my_awesome_kiwi`
-    robot.connect()
-
-    # Init rerun viewer
-    init_rerun(session_name="lekiwi_teleop")
-
-    #if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
-    if not robot.is_connected:
-        raise ValueError("Robot or teleop is not connected!")
-    
-    #Twitch Stuff
-    TWITCH_CHANNEL = 'spotfromdarpa' 
-    MAX_QUEUE_LENGTH = 20
-    #Messages to be addressed
-    message_queue = []
-    #twitch tasks yet to be done
-    active_tasks = []
-    #Possible Robot Commands
-    commands = ["forward", "backward", "left", "right"]
-    t = TwitchPlays_Connection.Twitch()
-    t.twitch_connect(TWITCH_CHANNEL)
-
-    def handle_message(messages):
+def handle_message(robot, messages):
         try:
             histogram = {"don't move":0}
             for message in messages:
@@ -108,8 +87,25 @@ def main():
             print("Encountered exception: " + str(e))
             return twitch_to_base_action(robot, "don't move")
 
+def main():
+    # Create the robot and teleoperator configurations
+    robot_config = LeKiwiClientConfig(remote_ip="192.168.0.251", id="my_awesome_kiwi")
 
+    # Initialize the robot and teleoperator
+    robot = LeKiwiClient(robot_config)
 
+    # Connect to the robot and teleoperator
+    # To connect you already should have this script running on LeKiwi: `python -m lerobot.robots.lekiwi.lekiwi_host --robot.id=my_awesome_kiwi`
+    robot.connect()
+
+    # Init rerun viewer
+    init_rerun(session_name="lekiwi_teleop")
+
+    #if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
+    if not robot.is_connected:
+        raise ValueError("Robot or teleop is not connected!")
+    t = TwitchPlays_Connections.Twitch()
+    t.twitch_connect(TWITCH_CHANNEL)
     print("Starting teleop loop...")
     while True:
         t0 = time.perf_counter()
@@ -133,7 +129,7 @@ def main():
             del message_queue[0:len(message_queue)]
             # For debug purposes, just to test that the action is sent to the bot correctly
             #twitch_action = "rotate_right"
-            base_action = handle_message(messages_to_handle)#twitch_to_base_action(robot, twitch_action)
+            base_action = handle_message(robot, messages_to_handle)#twitch_to_base_action(robot, twitch_action)
             arm_action = {'arm_shoulder_pan.pos': 0.00,
                         'arm_shoulder_lift.pos': -90.00,
                         'arm_elbow_flex.pos': 90.00,

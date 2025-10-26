@@ -144,6 +144,13 @@ def stream_to_udp(cameraIndex: int, destination: str):
         process.wait()
 
 
+def main():
+    # Arg1: Camera Index, Arg2: Destination IP and Port
+    if not sys.argv[1] or not sys.argv[2]:
+        print("invalid arguments. Enter as format: python video_sender.py [CAM_INDEX] [DESTINATIONIP:PORT]")
+        return
+    stream_to_udp(int(sys.argv[1]), sys.argv[2])
+
 if __name__ == "__main__":
     # Choose your streaming method:
     
