@@ -20,6 +20,9 @@ from lerobot.robots.lekiwi import LeKiwiClient, LeKiwiClientConfig
 from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.visualization_utils import init_rerun, log_rerun_data
 
+import TwitchPlays_Connection
+import keyboard
+
 FPS = 30
 
 # Converts the delta values to the actual m/s expected by the bot
@@ -71,32 +74,81 @@ def main():
     #if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
     if not robot.is_connected:
         raise ValueError("Robot or teleop is not connected!")
+    
+    #Twitch Stuff
+    TWITCH_CHANNEL = 'spotfromdarpa' 
+    MAX_QUEUE_LENGTH = 20
+    #Messages to be addressed
+    message_queue = []
+    #twitch tasks yet to be done
+    active_tasks = []
+    #Possible Robot Commands
+    commands = ["forward", "backward", "left", "right"]
+    t = TwitchPlays_Connection.Twitch()
+    t.twitch_connect(TWITCH_CHANNEL)
+
+    def handle_message(messages):
+        try:
+            histogram = {"don't move":0}
+            for message in messages:
+                msg = message['message'].lower()
+                username = message['username'].lower()
+                print("Got this message from " + username + ": " + msg)
+                if msg in commands:
+                    if msg in histogram.keys():
+                        histogram[msg] += 1
+                    else:
+                        histogram[msg] = 1
+            robot_command = "don't move"
+            for command, frequency in histogram.items():
+                if frequency > histogram[robot_command]:
+                    robot_command = command
+            return twitch_to_base_action(robot,robot_command)
+        except Exception as e:
+            print("Encountered exception: " + str(e))
+            return twitch_to_base_action(robot, "don't move")
+
+
 
     print("Starting teleop loop...")
     while True:
         t0 = time.perf_counter()
 
-        # Get robot observation
-        observation = robot.get_observation()
+        #Twitch Stuff
+        active_tasks = [t for t in active_tasks if not t.done()]
+        #Check for messages
+        new_messages = t.twitch_recieve_messages()
+        if new_messages:
+            message_queue += new_messages #Adds new messages to queue
+            message_queue = message_queue[-MAX_QUEUE_LENGTH] #Limits queue length
+        
+        if not message_queue:
+            time.sleep(1)
+        else:
+            # Get robot observation
+            observation = robot.get_observation()
 
-        # For debug purposes, just to test that the action is sent to the bot correctly
-        twitch_action = "rotate_right"
-        base_action = twitch_to_base_action(robot, twitch_action)
-        arm_action = {'arm_shoulder_pan.pos': 0.00,
-                      'arm_shoulder_lift.pos': -90.00,
-                      'arm_elbow_flex.pos': 90.00,
-                      'arm_wrist_flex.pos': 0.00,
-                      'arm_wrist_roll.pos': 0.00,
-                      'arm_gripper.pos': 5.00}
-        action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
+            #pops messages from queue
+            messages_to_handle = message_queue[0:len(message_queue)]
+            del message_queue[0:len(message_queue)]
+            # For debug purposes, just to test that the action is sent to the bot correctly
+            #twitch_action = "rotate_right"
+            base_action = handle_message(messages_to_handle)#twitch_to_base_action(robot, twitch_action)
+            arm_action = {'arm_shoulder_pan.pos': 0.00,
+                        'arm_shoulder_lift.pos': -90.00,
+                        'arm_elbow_flex.pos': 90.00,
+                        'arm_wrist_flex.pos': 0.00,
+                        'arm_wrist_roll.pos': 0.00,
+                        'arm_gripper.pos': 5.00}
+            action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
 
-        # Send action to robot
-        _ = robot.send_action(action)
+            # Send action to robot
+            _ = robot.send_action(action)
 
-        # Visualize
-        log_rerun_data(observation=observation, action=action)
+            # Visualize
+            log_rerun_data(observation=observation, action=action)
 
-        busy_wait(max(1.0 / FPS - (time.perf_counter() - t0), 0.0))
+            busy_wait(max(1.0 / FPS - (time.perf_counter() - t0), 0.0))
 
 if __name__ == "__main__":
     main()
