@@ -157,15 +157,14 @@ def main():
     while True:
         t0 = time.perf_counter()
         #Twitch Stuff
-        #active_tasks = [t for t in active_tasks if not t.done()]
         #Check for messages
         new_messages = t.twitch_receive_messages()
         if new_messages:
             message_queue += new_messages #Adds new messages to queue
             message_queue = message_queue[:MAX_QUEUE_LENGTH] #Limits queue length
         
-        # if not message_queue:
-        #     time.sleep(1)
+        if not message_queue:
+             time.sleep(1)
         else:
             # Get robot observation
             observation = robot.get_observation()
@@ -175,10 +174,10 @@ def main():
             message_queue = []
             
             # For debug purposes, just to test that the action is sent to the bot correctly
-            twitch_action = "raise arm"
+            #twitch_action = "raise arm"
             base_action = handle_message_body(robot, messages_to_handle) #twitch_to_base_action(robot, twitch_action)
-            #arm_action = handle_message_arm(arm_action, messages_to_handle)
-            arm_action = twitch_to_arm_action(arm_action, twitch_action)
+            arm_action = handle_message_arm(arm_action, messages_to_handle)
+            #arm_action = twitch_to_arm_action(arm_action, twitch_action)
             action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
 
             # Send action to robot
