@@ -10,7 +10,7 @@ import TwitchPlays_Connection
 ##################### GAME VARIABLES #####################
 
 # Replace this with your Twitch username. Must be all lowercase.
-TWITCH_CHANNEL = 'spotfromdarpa' 
+TWITCH_CHANNEL = 'mintchipss' 
 
 # If streaming on Youtube, set this to False
 STREAMING_ON_TWITCH = True
