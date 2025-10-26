@@ -29,12 +29,10 @@ FPS = 30
 TWITCH_CHANNEL = 'spotfromdarpa' 
 MAX_QUEUE_LENGTH = 20
  #Messages to be addressed
-message_queue = []
-#twitch tasks yet to be done
-active_tasks = []
+message_queue= []
 #Possible Robot Commands
-commands = ["forward", "backward", "left", "right", "rotate_left", "rotate_right"]
-
+body_commands = ["forward", "backward", "left", "right", "rotate_left", "rotate_right"]
+arm_commands = ["look up", "look down", "open", "close", "raise arm", "lower arm"]
 # Converts the delta values to the actual m/s expected by the bot
 def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
     # Speed control, index options are 0, 1, 2 for slow, medium, fast, repsectively
@@ -74,7 +72,7 @@ def handle_message(robot, messages):
                 msg = message['message'].lower()
                 username = message['username'].lower()
                 print("Got this message from " + username + ": " + msg)
-                if msg in commands:
+                if msg in body_commands:
                     if msg in histogram.keys():
                         histogram[msg] += 1
                     else:
@@ -105,19 +103,18 @@ def main():
     #if not robot.is_connected or not leader_arm.is_connected or not twitch.is_connected:
     if not robot.is_connected:
         raise ValueError("Robot or teleop is not connected!")
+    #Connecting to Twitch
     t = TwitchPlays_Connections.Twitch()
     t.twitch_connect(TWITCH_CHANNEL)
     print("Starting teleop loop...")
     while True:
         t0 = time.perf_counter()
-
         #Twitch Stuff
-        active_tasks = [t for t in active_tasks if not t.done()]
         #Check for messages
-        new_messages = t.twitch_recieve_messages()
+        new_messages = t.twitch_receive_messages()
         if new_messages:
             message_queue += new_messages #Adds new messages to queue
-            message_queue = message_queue[-MAX_QUEUE_LENGTH] #Limits queue length
+            message_queue = message_queue[:MAX_QUEUE_LENGTH] #Limits queue length
         
         if not message_queue:
             time.sleep(1)
@@ -127,7 +124,8 @@ def main():
 
             #pops messages from queue
             messages_to_handle = message_queue[0:len(message_queue)]
-            del message_queue[0:len(message_queue)]
+            message_queue = []
+            
             # For debug purposes, just to test that the action is sent to the bot correctly
             #twitch_action = "rotate_right"
             base_action = handle_message(robot, messages_to_handle)#twitch_to_base_action(robot, twitch_action)
