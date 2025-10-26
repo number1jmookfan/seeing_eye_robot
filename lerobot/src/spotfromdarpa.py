@@ -67,25 +67,25 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
 def twitch_to_arm_position(arm_goal_position, twitch_action):
     match twitch_action:
         case "look down":
-            if arm_goal_position['arm_wrist_flex.pos'] + 1 <= 80:
-                arm_goal_position['arm_wrist_flex.pos'] += 1
+            if arm_goal_position['arm_wrist_flex.pos'] + 3 <= 80:
+                arm_goal_position['arm_wrist_flex.pos'] += 3
         case "look up":
-            if arm_goal_position['arm_wrist_flex.pos'] - 1 >= 0:
-                arm_goal_position['arm_wrist_flex.pos'] -= 1
+            if arm_goal_position['arm_wrist_flex.pos'] - 3 >= 0:
+                arm_goal_position['arm_wrist_flex.pos'] -= 3
         case "open":
             arm_goal_position['arm_gripper.pos'] = 45.00
         case "close":
             arm_goal_position['arm_gripper.pos'] = 5.00
         case "raise arm":
-            if arm_goal_position['arm_shoulder_lift.pos'] + 1 <= -45:
-                arm_goal_position['arm_shoulder_lift.pos'] += 1
-            if arm_goal_position['arm_elbow_flex.pos'] - 3 >= -40:
-                arm_goal_position['arm_elbow_flex.pos'] -= 3
+            if arm_goal_position['arm_shoulder_lift.pos'] + 3 <= -45:
+                arm_goal_position['arm_shoulder_lift.pos'] += 3
+            if arm_goal_position['arm_elbow_flex.pos'] - 10 >= -40:
+                arm_goal_position['arm_elbow_flex.pos'] -= 10
         case "lower arm":
-            if arm_goal_position['arm_shoulder_lift.pos'] - 1 >= -90:
-                arm_goal_position['arm_shoulder_lift.pos'] -= 1
-            if arm_goal_position['arm_elbow_flex.pos'] + 3 <= 90:
-                arm_goal_position['arm_elbow_flex.pos'] += 3
+            if arm_goal_position['arm_shoulder_lift.pos'] - 3 >= -90:
+                arm_goal_position['arm_shoulder_lift.pos'] -= 3
+            if arm_goal_position['arm_elbow_flex.pos'] + 10 <= 90:
+                arm_goal_position['arm_elbow_flex.pos'] += 10
         case "bark":
             barker.play()
     return arm_goal_position
