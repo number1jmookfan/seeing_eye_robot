@@ -38,7 +38,7 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
     theta_cmd = 0.0  # deg/s rotation
 
     match twitch_action:
-        case "foward":
+        case "forward":
             x_cmd = xy_speed
         case "backward":
             x_cmd = -xy_speed
@@ -83,7 +83,7 @@ def main():
     #twitch tasks yet to be done
     active_tasks = []
     #Possible Robot Commands
-    commands = ["forward", "backward", "left", "right"]
+    commands = ["forward", "backward", "left", "right", "rotate_left", "rotate_right"]
     t = TwitchPlays_Connection.Twitch()
     t.twitch_connect(TWITCH_CHANNEL)
 
