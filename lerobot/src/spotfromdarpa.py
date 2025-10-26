@@ -26,6 +26,8 @@ import TwitchPlays_Connections
 FPS = 30
 
 bark_file = os.path.abspath("bark.mp3")
+# Used to connect to OBS and play barks
+barker = Barker()
 
  #Twitch Stuff
 TWITCH_CHANNEL = 'spotfromdarpa' 
@@ -34,7 +36,7 @@ MAX_QUEUE_LENGTH = 20
 
 #Possible Robot Commands
 body_commands = ["forward", "backward", "left", "right", "rotate_left", "rotate_right"]
-arm_commands = ["look up", "look down", "open", "close", "raise arm", "lower arm"]
+arm_commands = ["look up", "look down", "open", "close", "raise arm", "lower arm", "bark"]
 # Converts the delta values to the actual m/s expected by the bot
 def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
     # Speed control, index options are 0, 1, 2 for slow, medium, fast, repsectively
@@ -84,6 +86,8 @@ def twitch_to_arm_position(arm_goal_position, twitch_action):
                 arm_goal_position['arm_shoulder_lift.pos'] -= 1
             if arm_goal_position['arm_elbow_flex.pos'] + 3 <= 90:
                 arm_goal_position['arm_elbow_flex.pos'] += 3
+        case "bark":
+            barker.play()
     return arm_goal_position
 
 def handle_messages(robot, arm_pos, messages):
@@ -134,8 +138,6 @@ def main():
 
     # Initialize the robot and teleoperator
     robot = LeKiwiClient(robot_config)
-    # Used to connect to OBS and play barks
-    barker = Barker()
 
     #Intitialize arm action
     arm_position = {  'arm_shoulder_pan.pos': 0.00,
