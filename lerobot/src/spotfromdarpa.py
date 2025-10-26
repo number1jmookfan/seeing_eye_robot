@@ -61,26 +61,26 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
 
 def twitch_to_arm_action(arm_action, twitch_action):
     match twitch_action:
-        case "look up":
-            if arm_action['arm_wrist_flex.pos'] + 5 <= 80:
-                arm_action['arm_wrist_flex.pos'] += 5
         case "look down":
-            if arm_action['arm_wrist_flex.pos'] - 5 >= 0:
-                arm_action['arm_wrist_flex.pos'] -= 5
+            if arm_action['arm_wrist_flex.pos'] + 1 <= 80:
+                arm_action['arm_wrist_flex.pos'] += 1
+        case "look up":
+            if arm_action['arm_wrist_flex.pos'] - 1 >= 0:
+                arm_action['arm_wrist_flex.pos'] -= 1
         case "open":
             arm_action['arm_gripper.pos'] = 45.00
         case "close":
             arm_action['arm_gripper.pos'] = 5.00
         case "raise arm":
-            if arm_action['arm_shoulder_lift.pos'] + 3 <= -45:
-                arm_action['arm_shoulder_lift.pos'] += 3
-            if arm_action['arm_elbow_flex.pos'] - 10 >= -40:
-                arm_action['arm_elbow_flex.pos'] -= 10
+            if arm_action['arm_shoulder_lift.pos'] + 1 <= -45:
+                arm_action['arm_shoulder_lift.pos'] += 1
+            if arm_action['arm_elbow_flex.pos'] - 3 >= -40:
+                arm_action['arm_elbow_flex.pos'] -= 3
         case "lower arm":
-            if arm_action['arm_shoulder_lift.pos'] - 3 >= -90:
-                arm_action['arm_shoulder_lift.pos'] -= 3
-            if arm_action['arm_elbow_flex.pos'] + 10 <= 90:
-                arm_action['arm_elbow_flex.pos'] += 10
+            if arm_action['arm_shoulder_lift.pos'] - 1 >= -90:
+                arm_action['arm_shoulder_lift.pos'] -= 1
+            if arm_action['arm_elbow_flex.pos'] + 3 <= 90:
+                arm_action['arm_elbow_flex.pos'] += 3
     return arm_action
 
 def handle_message_body(robot, messages):
@@ -164,8 +164,8 @@ def main():
             message_queue += new_messages #Adds new messages to queue
             message_queue = message_queue[:MAX_QUEUE_LENGTH] #Limits queue length
         
-        if not message_queue:
-            time.sleep(1)
+        # if not message_queue:
+        #     time.sleep(1)
         else:
             # Get robot observation
             observation = robot.get_observation()
@@ -175,9 +175,10 @@ def main():
             message_queue = []
             
             # For debug purposes, just to test that the action is sent to the bot correctly
-            #twitch_action = "rotate_right"
+            twitch_action = "raise arm"
             base_action = handle_message_body(robot, messages_to_handle) #twitch_to_base_action(robot, twitch_action)
-            arm_action = handle_message_arm(arm_action, messages_to_handle)
+            #arm_action = handle_message_arm(arm_action, messages_to_handle)
+            arm_action = twitch_to_arm_action(arm_action, twitch_action)
             action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
 
             # Send action to robot
