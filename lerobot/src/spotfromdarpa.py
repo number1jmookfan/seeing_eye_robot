@@ -25,7 +25,7 @@ import TwitchPlays_Connections
 FPS = 30
 
  #Twitch Stuff
-TWITCH_CHANNEL = 'spotfromdarpa' 
+TWITCH_CHANNEL = 'mintchipss' 
 MAX_QUEUE_LENGTH = 20
  #Messages to be addressed
 message_queue = []
@@ -89,6 +89,7 @@ def handle_message(robot, messages):
             return twitch_to_base_action(robot, "don't move")
 
 def main():
+    global message_queue
     # Create the robot and teleoperator configurations
     robot_config = LeKiwiClientConfig(remote_ip="192.168.0.251", id="my_awesome_kiwi")
 
@@ -112,12 +113,12 @@ def main():
         t0 = time.perf_counter()
 
         #Twitch Stuff
-        active_tasks = [t for t in active_tasks if not t.done()]
+        #active_tasks = [t for t in active_tasks if not t.done()]
         #Check for messages
-        new_messages = t.twitch_recieve_messages()
+        new_messages = t.twitch_receive_messages()
         if new_messages:
             message_queue += new_messages #Adds new messages to queue
-            message_queue = message_queue[-MAX_QUEUE_LENGTH] #Limits queue length
+            message_queue = message_queue[:MAX_QUEUE_LENGTH] #Limits queue length
         
         if not message_queue:
             time.sleep(1)
@@ -127,7 +128,7 @@ def main():
 
             #pops messages from queue
             messages_to_handle = message_queue[0:len(message_queue)]
-            del message_queue[0:len(message_queue)]
+            message_queue = []
             # For debug purposes, just to test that the action is sent to the bot correctly
             #twitch_action = "rotate_right"
             base_action = handle_message(robot, messages_to_handle)#twitch_to_base_action(robot, twitch_action)
