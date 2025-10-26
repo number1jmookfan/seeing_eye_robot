@@ -52,14 +52,15 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
         case "backward":
             x_cmd = -xy_speed
         case "left":
-            y_cmd = xy_speed
-        case "right":
-            y_cmd = -xy_speed
-        case "rotate_left":
             theta_cmd = theta_speed
-        case "rotate_right":
+        case "right":
             theta_cmd = -theta_speed
-            
+        case "open":
+            # Set arm_gripper.pos to be open
+        case "close":
+            # Set arm_gripper.pos to be closed
+
+
     return {
         "x.vel": x_cmd,
         "y.vel": y_cmd,
