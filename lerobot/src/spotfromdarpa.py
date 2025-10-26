@@ -62,71 +62,70 @@ def twitch_to_base_action(robot: LeKiwiClient, twitch_action):
         "theta.vel": theta_cmd,
     }
 
-def twitch_to_arm_action(arm_action, twitch_action):
+def twitch_to_arm_position(arm_goal_position, twitch_action):
     match twitch_action:
         case "look down":
-            if arm_action['arm_wrist_flex.pos'] + 1 <= 80:
-                arm_action['arm_wrist_flex.pos'] += 1
+            if arm_goal_position['arm_wrist_flex.pos'] + 1 <= 80:
+                arm_goal_position['arm_wrist_flex.pos'] += 1
         case "look up":
-            if arm_action['arm_wrist_flex.pos'] - 1 >= 0:
-                arm_action['arm_wrist_flex.pos'] -= 1
+            if arm_goal_position['arm_wrist_flex.pos'] - 1 >= 0:
+                arm_goal_position['arm_wrist_flex.pos'] -= 1
         case "open":
-            arm_action['arm_gripper.pos'] = 45.00
+            arm_goal_position['arm_gripper.pos'] = 45.00
         case "close":
-            arm_action['arm_gripper.pos'] = 5.00
+            arm_goal_position['arm_gripper.pos'] = 5.00
         case "raise arm":
-            if arm_action['arm_shoulder_lift.pos'] + 1 <= -45:
-                arm_action['arm_shoulder_lift.pos'] += 1
-            if arm_action['arm_elbow_flex.pos'] - 3 >= -40:
-                arm_action['arm_elbow_flex.pos'] -= 3
+            if arm_goal_position['arm_shoulder_lift.pos'] + 1 <= -45:
+                arm_goal_position['arm_shoulder_lift.pos'] += 1
+            if arm_goal_position['arm_elbow_flex.pos'] - 3 >= -40:
+                arm_goal_position['arm_elbow_flex.pos'] -= 3
         case "lower arm":
-            if arm_action['arm_shoulder_lift.pos'] - 1 >= -90:
-                arm_action['arm_shoulder_lift.pos'] -= 1
-            if arm_action['arm_elbow_flex.pos'] + 3 <= 90:
-                arm_action['arm_elbow_flex.pos'] += 3
-    return arm_action
+            if arm_goal_position['arm_shoulder_lift.pos'] - 1 >= -90:
+                arm_goal_position['arm_shoulder_lift.pos'] -= 1
+            if arm_goal_position['arm_elbow_flex.pos'] + 3 <= 90:
+                arm_goal_position['arm_elbow_flex.pos'] += 3
+    return arm_goal_position
 
-def handle_message_body(robot, messages):
-        try:
-            histogram = {"don't move":0}
-            for message in messages:
-                msg = message['message'].lower()
-                username = message['username'].lower()
-                print("Got this message from " + username + ": " + msg)
-                if msg in body_commands:
-                    if msg in histogram.keys():
-                        histogram[msg] += 1
-                    else:
-                        histogram[msg] = 1
-            robot_command = "don't move"
-            for command, frequency in histogram.items():
-                if frequency > histogram[robot_command]:
-                    robot_command = command
-            return twitch_to_base_action(robot,robot_command)
-        except Exception as e:
-            print("Encountered exception: " + str(e))
-            return twitch_to_base_action(robot, "don't move")
+def handle_messages(robot, arm_pos, messages):
+    try:
+        # Body/base and arm commans may happen simultaneously
+        body_histogram = {"don't move": 0}
+        arm_histogram = {"don't move": 0}
+        # Analyze the given messages for most typed base and most typed arm command
+        for message in messages:
+            msg = message['message'].lower()
+            username = message['username'].lower()
+            print("Got this message from " + username + ": " + msg)
+            if msg in body_commands:
+                if msg in body_histogram.keys():
+                    body_histogram[msg] += 1
+                else:
+                    body_histogram[msg] = 1
+            if msg in arm_commands:
+                if msg in arm_histogram.keys():
+                    arm_histogram[msg] += 1
+                else:
+                    arm_histogram[msg] = 1
+        # Default to no movement
+        body_command = "don't move"
+        arm_command = "don't move"
+        # Set arm command to most frequent one
+        for command, frequency in arm_histogram.items():
+            if frequency > arm_histogram[arm_command]:
+                arm_command = command
+        # Set body command to most frequent one
+        for command, frequency in body_histogram.items():
+            if frequency > body_histogram[body_command]:
+                body_command = command
 
-def handle_message_arm(arm_action, messages):
-        try:
-            histogram = {"don't move":0}
-            for message in messages:
-                msg = message['message'].lower()
-                username = message['username'].lower()
-                print("Got this message from " + username + ": " + msg)
-                if msg in arm_commands:
-                    if msg in histogram.keys():
-                        histogram[msg] += 1
-                    else:
-                        histogram[msg] = 1
-            robot_command = "don't move"
-            for command, frequency in histogram.items():
-                if frequency > histogram[robot_command]:
-                    robot_command = command
-            return twitch_to_arm_action(arm_action,robot_command)
-        except Exception as e:
-            print("Encountered exception: " + str(e))
-            return twitch_to_arm_action(arm_action, "don't move")
+        # Convert the commands into data expected by the bot
+        body_action = twitch_to_base_action(robot, body_command)
+        arm_action = twitch_to_arm_position(arm_pos, arm_command)
+        return {**arm_action, **body_action}
+
+    except Exception as e:
+        print("Encountered exception: " + str(e))
+        return None
 
 def main():
     message_queue = []
@@ -139,12 +138,13 @@ def main():
     barker = Barker()
 
     #Intitialize arm action
-    arm_action = {'arm_shoulder_pan.pos': 0.00,
-                        'arm_shoulder_lift.pos': -90.00,
-                        'arm_elbow_flex.pos': 90.00,
-                        'arm_wrist_flex.pos': 0.00,
-                        'arm_wrist_roll.pos': 0.00,
-                        'arm_gripper.pos': 5.00}
+    arm_position = {  'arm_shoulder_pan.pos': 0.00,
+                    'arm_shoulder_lift.pos': -90.00,
+                    'arm_elbow_flex.pos': 90.00,
+                    'arm_wrist_flex.pos': 0.00,
+                    'arm_wrist_roll.pos': 0.00,
+                    'arm_gripper.pos': 5.00
+                    }
 
     # Connect to the robot and teleoperator
     # To connect you already should have this script running on LeKiwi: `python -m lerobot.robots.lekiwi.lekiwi_host --robot.id=my_awesome_kiwi`
@@ -184,11 +184,7 @@ def main():
             message_queue = []
             
             # For debug purposes, just to test that the action is sent to the bot correctly
-            #twitch_action = "raise arm"
-            base_action = handle_message_body(robot, messages_to_handle) #twitch_to_base_action(robot, twitch_action)
-            arm_action = handle_message_arm(arm_action, messages_to_handle)
-            #arm_action = twitch_to_arm_action(arm_action, twitch_action)
-            action = {**arm_action, **base_action} if len(base_action) > 0 else arm_action
+            action = handle_messages(robot, arm_position, messages_to_handle)
 
             # Send action to robot
             _ = robot.send_action(action)
